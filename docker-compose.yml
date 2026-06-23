@@ -1,0 +1,57 @@
+# ============================================================================
+#  docker-compose.yml
+# ----------------------------------------------------------------------------
+#  Menjalankan DUA container sekaligus dengan satu perintah:
+#    1. datadog-agent  -> "kurir" yang mengirim metrics & traces ke Datadog.
+#    2. mini-app       -> aplikasi Go kita yang sudah diinstrumentasi.
+#
+#  Keduanya berada di jaringan Docker yang sama, sehingga mini-app bisa
+#  mengirim trace ke agent melalui nama host "datadog-agent" di port 8126.
+#
+#  CARA PAKAI:
+#    1. Salin file .env.example menjadi .env, lalu isi DD_API_KEY & DD_SITE.
+#    2. Jalankan:  docker compose up --build
+#    3. Buka http://localhost:8080
+# ============================================================================
+
+services:
+  # -------------------- Datadog Agent --------------------
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:latest
+    container_name: datadog-agent
+    environment:
+      # API Key & site diambil dari file .env (JANGAN ditulis langsung di sini).
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_SITE=${DD_SITE}
+      # Menyalakan penerimaan APM (traces).
+      - DD_APM_ENABLED=true
+      # Mengizinkan trace dari container lain (bukan hanya localhost).
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+      # Menyalakan pengumpulan logs (opsional, berguna untuk dashboard).
+      - DD_LOGS_ENABLED=true
+    ports:
+      - "8126:8126/tcp" # port APM (traces)
+    volumes:
+      # Akses informasi container & sistem host (read-only).
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+
+  # -------------------- Mini Application --------------------
+  mini-app:
+    build: . # membangun image dari Dockerfile di folder ini
+    container_name: mini-app
+    environment:
+      # Nama service & env yang akan muncul di Datadog APM.
+      - DD_SERVICE=mini-app
+      - DD_ENV=dev
+      # Memberi tahu library cara menemukan Agent (lewat nama service di atas).
+      - DD_AGENT_HOST=datadog-agent
+      # Mengirim 100% trace agar saat demo semua request terlihat.
+      - DD_TRACE_SAMPLE_RATE=1
+      # Menghubungkan trace dengan logs (unified service tagging).
+      - DD_VERSION=1.0.0
+    ports:
+      - "8080:8080" # akses aplikasi dari browser di http://localhost:8080
+    depends_on:
+      - datadog-agent # pastikan agent menyala lebih dulu

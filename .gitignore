@@ -1,0 +1,16 @@
+# Rahasia - JANGAN di-commit
+.env
+
+# Binary hasil kompilasi
+/server
+mini-app
+*.exe
+
+# File go.sum boleh di-commit, tapi cache lokal tidak
+/vendor/
+
+# File OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
