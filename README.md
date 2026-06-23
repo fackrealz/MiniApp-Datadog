@@ -1,6 +1,6 @@
 # Mini App & Instrumentasi Datadog
 
-Satu aplikasi ini bisa mendemonstrasikan **keempat objektif** sekaligus:
+Satu aplikasi ini bisa mendemonstrasikan **ketiga objektif** sekaligus:
 
 | Objektif (Komponen 1) | Dibuktikan oleh | Cara memicu |
 |---|---|---|
