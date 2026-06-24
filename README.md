@@ -1,12 +1,17 @@
-# Mini App & Instrumentasi Datadog
+# Mini App & Instrumentasi Datadog — Panduan Lengkap untuk Pemula
 
-Satu aplikasi ini bisa mendemonstrasikan **ketiga objektif** sekaligus:
+Aplikasi web kecil ini dibuat untuk **Tugas L1 Monitoring — Komponen 2 (Mini Application & Instrumentasi)**, dan dirancang agar langsung **terkorelasi dengan Komponen 1 (Eksplorasi & Pemahaman Datadog)**.
+
+Satu aplikasi ini bisa mendemonstrasikan **keempat objektif** sekaligus:
 
 | Objektif (Komponen 1) | Dibuktikan oleh | Cara memicu |
 |---|---|---|
 | **RPS** (Requests Per Second) | endpoint `/work` | tembak banyak request (pakai `loadgen`) |
 | **Latency** (p50/p95/p99) | endpoint `/work?slow=1` | request lambat 0.8–2 detik |
 | **Error Rate** | endpoint `/work?fail=1` | request balas HTTP 500 |
+| **Distributed Tracing** | endpoint `/checkout` | satu request memunculkan beberapa span bertingkat |
+
+> Kamu **tidak perlu paham Go** untuk menjalankannya. Semua berjalan di dalam Docker. Tapi setiap baris kode di `main.go` sudah diberi komentar Bahasa Indonesia agar kamu bisa menjelaskannya saat presentasi.
 
 ---
 
@@ -16,7 +21,8 @@ Satu aplikasi ini bisa mendemonstrasikan **ketiga objektif** sekaligus:
 3. Langkah menjalankan (paling penting)
 4. Membuktikan tiap objektif di Datadog
 5. Menghubungkan ke dashboard & alert (Komponen 1)
-6. Troubleshooting
+6. Pertanyaan yang mungkin ditanya penilai
+7. Troubleshooting
 
 ---
 
@@ -88,6 +94,7 @@ Jalankan skenario spesifik agar tiap sinyal terlihat jelas saat merekam video:
 ./loadgen.sh normal     # RPS naik, latency rendah, 0% error
 ./loadgen.sh slow       # latency p95/p99 melonjak
 ./loadgen.sh error      # error rate naik (HTTP 500)
+./loadgen.sh checkout   # distributed tracing (span bertingkat)
 ```
 
 **RPS** — di APM → Services → `mini-app`, lihat grafik *Requests* / *Throughput*. Saat loadgen jalan, garis naik.
@@ -95,6 +102,8 @@ Jalankan skenario spesifik agar tiap sinyal terlihat jelas saat merekam video:
 **Latency** — di grafik *Latency*, tampilkan p50, p95, p99. Jalankan skenario `slow` dan tunjukkan p99 melonjak jauh di atas p50.
 
 **Error Rate** — di grafik *Errors*. Jalankan skenario `error`; persentase error naik. Inilah pemicu alert kamu nanti.
+
+**Distributed Tracing** — APM → Traces → klik salah satu trace `/checkout`. Kamu akan melihat *flame graph* dengan span: `checkout.request` → `validate.order` → `db.save_order` (paling lebar = bottleneck) → `payment.charge`. Tunjuk span database sebagai bottleneck saat presentasi.
 
 ---
 
@@ -109,7 +118,16 @@ Dengan begitu, video screencast kamu bisa menunjukkan alur penuh: aplikasi jalan
 
 ---
 
-## 6. Troubleshooting
+## 6. Pertanyaan yang mungkin ditanya penilai (siapkan jawaban)
+
+- **"Bagaimana aplikasi mengirim data ke Datadog?"** Lewat library `dd-trace-go`. `httptrace.NewServeMux` otomatis membungkus tiap request HTTP menjadi span dan mengirimkannya ke Datadog Agent di port 8126; Agent meneruskannya ke Datadog cloud.
+- **"Apa beda trace dan span?"** Trace = seluruh perjalanan satu request. Span = satu langkah di dalamnya. Lihat `/checkout` yang punya beberapa span.
+- **"Kenapa pakai p99, bukan rata-rata?"** Rata-rata menyembunyikan request paling lambat. p99 menangkap 1% terburuk yang justru paling perlu dideteksi.
+- **"Di mana bottleneck pada /checkout?"** Pada span `db.save_order` yang sengaja paling lambat — terlihat paling lebar di flame graph.
+
+---
+
+## 7. Troubleshooting
 
 - **Service tidak muncul di APM** → pastikan `DD_API_KEY` & `DD_SITE` di `.env` benar; tunggu 1–2 menit; pastikan loadgen sudah dijalankan (tanpa request, tak ada data).
 - **`docker compose` tidak dikenal** → pakai Docker versi baru, atau coba `docker-compose` (pakai tanda hubung).
@@ -117,3 +135,6 @@ Dengan begitu, video screencast kamu bisa menunjukkan alur penuh: aplikasi jalan
 - **Error rate tidak naik** → pastikan menjalankan skenario `error`, dan lihat grafik dengan rentang waktu *Past 15 Minutes*.
 
 ---
+
+### Catatan kejujuran akademik
+Kode ini boleh dikembangkan dengan bantuan AI coding assistant (sesuai aturan tugas), **tetapi pastikan kamu memahami tiap baris** — komentar di `main.go` dibuat untuk itu. Sebutkan nama anggota kelompok bila dikerjakan bersama saat pengumpulan.
