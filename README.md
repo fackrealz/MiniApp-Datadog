@@ -1,4 +1,4 @@
-# Mini App & Instrumentasi Datadog — Panduan Lengkap untuk Pemula
+# Mini App & Instrumentasi Datadog 
 
 Aplikasi web kecil ini dibuat untuk **Tugas L1 Monitoring — Komponen 2 (Mini Application & Instrumentasi)**, dan dirancang agar langsung **terkorelasi dengan Komponen 1 (Eksplorasi & Pemahaman Datadog)**.
 
@@ -21,8 +21,7 @@ Satu aplikasi ini bisa mendemonstrasikan **keempat objektif** sekaligus:
 3. Langkah menjalankan (paling penting)
 4. Membuktikan tiap objektif di Datadog
 5. Menghubungkan ke dashboard & alert (Komponen 1)
-6. Pertanyaan yang mungkin ditanya penilai
-7. Troubleshooting
+6. Troubleshooting
 
 ---
 
@@ -116,18 +115,10 @@ Aplikasi ini adalah "alat peraga" untuk dashboard dan alert yang kamu buat di Ko
 
 Dengan begitu, video screencast kamu bisa menunjukkan alur penuh: aplikasi jalan → grafik bergerak → alert menyala → notifikasi masuk.
 
----
-
-## 6. Pertanyaan yang mungkin ditanya penilai (siapkan jawaban)
-
-- **"Bagaimana aplikasi mengirim data ke Datadog?"** Lewat library `dd-trace-go`. `httptrace.NewServeMux` otomatis membungkus tiap request HTTP menjadi span dan mengirimkannya ke Datadog Agent di port 8126; Agent meneruskannya ke Datadog cloud.
-- **"Apa beda trace dan span?"** Trace = seluruh perjalanan satu request. Span = satu langkah di dalamnya. Lihat `/checkout` yang punya beberapa span.
-- **"Kenapa pakai p99, bukan rata-rata?"** Rata-rata menyembunyikan request paling lambat. p99 menangkap 1% terburuk yang justru paling perlu dideteksi.
-- **"Di mana bottleneck pada /checkout?"** Pada span `db.save_order` yang sengaja paling lambat — terlihat paling lebar di flame graph.
 
 ---
 
-## 7. Troubleshooting
+## 6. Troubleshooting
 
 - **Service tidak muncul di APM** → pastikan `DD_API_KEY` & `DD_SITE` di `.env` benar; tunggu 1–2 menit; pastikan loadgen sudah dijalankan (tanpa request, tak ada data).
 - **`docker compose` tidak dikenal** → pakai Docker versi baru, atau coba `docker-compose` (pakai tanda hubung).
@@ -135,6 +126,3 @@ Dengan begitu, video screencast kamu bisa menunjukkan alur penuh: aplikasi jalan
 - **Error rate tidak naik** → pastikan menjalankan skenario `error`, dan lihat grafik dengan rentang waktu *Past 15 Minutes*.
 
 ---
-
-### Catatan kejujuran akademik
-Kode ini boleh dikembangkan dengan bantuan AI coding assistant (sesuai aturan tugas), **tetapi pastikan kamu memahami tiap baris** — komentar di `main.go` dibuat untuk itu. Sebutkan nama anggota kelompok bila dikerjakan bersama saat pengumpulan.
